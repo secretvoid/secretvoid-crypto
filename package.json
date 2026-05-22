@@ -1,0 +1,39 @@
+{
+  "name": "secretvoid-crypto",
+  "version": "1.0.0",
+  "description": "Client-side zero-knowledge AES-256-GCM crypto module for SecretVoid. Web Crypto API, no dependencies.",
+  "type": "module",
+  "main": "./src/index.js",
+  "exports": {
+    ".": "./src/index.js"
+  },
+  "files": [
+    "src/"
+  ],
+  "scripts": {
+    "test": "node --experimental-vm-modules node_modules/.bin/jest",
+    "test:watch": "node --experimental-vm-modules node_modules/.bin/jest --watch"
+  },
+  "keywords": [
+    "encryption",
+    "aes-gcm",
+    "zero-knowledge",
+    "web-crypto",
+    "secrets",
+    "secretvoid"
+  ],
+  "author": "markabruce",
+  "license": "MIT",
+  "devDependencies": {
+    "jest": "^29.7.0"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "testMatch": [
+      "**/tests/**/*.test.js"
+    ]
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
