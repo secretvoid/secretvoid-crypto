@@ -1,6 +1,6 @@
 {
   "name": "secretvoid-crypto",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Client-side zero-knowledge AES-256-GCM crypto module for SecretVoid. Web Crypto API, no dependencies.",
   "type": "module",
   "main": "./src/index.js",
