@@ -200,7 +200,7 @@ export function generateShareUrl(id, exportedKey) {
     typeof window !== 'undefined' && window.location
       ? window.location.origin
       : 'https://secretvoid.com';
-  return `${origin}/s/${id}#${exportedKey}`;
+  return `${origin}/secret/${id}#${exportedKey}`;
 }
 
 /**

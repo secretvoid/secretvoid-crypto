@@ -201,7 +201,7 @@ describe('generateShareUrl', () => {
   test('produces correct URL with id and key in fragment', async () => {
     const exported = await exportKey(await generateKey());
     const url = generateShareUrl('abc123', exported);
-    expect(url).toBe(`https://secretvoid.com/s/abc123#${exported}`);
+    expect(url).toBe(`https://secretvoid.com/secret/abc123#${exported}`);
   });
 
   test('fragment contains the exported key exactly', async () => {
