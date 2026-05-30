@@ -86,7 +86,8 @@ describe('encrypt / decrypt', () => {
   test('tampered ciphertext throws an authentication error', async () => {
     const key = await generateKey();
     const { payload, iv } = await encrypt('secret', key);
-    const tampered = payload.slice(0, -1) + (payload.slice(-1) === 'A' ? 'B' : 'A');
+    const mid = Math.floor(payload.length / 2);
+    const tampered = payload.slice(0, mid) + (payload[mid] === 'A' ? 'B' : 'A') + payload.slice(mid + 1);
     await expect(decrypt(tampered, iv, key)).rejects.toThrow();
   });
 
