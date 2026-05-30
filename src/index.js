@@ -111,24 +111,24 @@ export async function importKey(base64Key) {
 }
 
 // ---------------------------------------------------------------------------
-// Passphrase protection (PBKDF2 + AES-KW)
+// Password protection (PBKDF2 + AES-KW)
 // ---------------------------------------------------------------------------
 
 /**
- * Derive an AES-256-KW key from a user passphrase using PBKDF2.
+ * Derive an AES-256-KW key from a user password using PBKDF2.
  * Uses 100,000 iterations with SHA-256. The salt must be stored alongside
  * the wrapped key so the recipient can re-derive the same key.
  *
- * @param {string} passphrase - User-supplied passphrase
+ * @param {string} password - User-supplied password
  * @param {Uint8Array|ArrayBuffer|string} salt - Random salt (or base64url string)
  * @returns {Promise<CryptoKey>} AES-KW key for wrapKey / unwrapKey
  */
-export async function deriveKeyFromPassphrase(passphrase, salt) {
+export async function deriveKeyFromPassword(password, salt) {
   const rawSalt = typeof salt === 'string' ? base64ToArrayBuffer(salt) : salt;
 
   const baseKey = await crypto.subtle.importKey(
     'raw',
-    new TextEncoder().encode(passphrase),
+    new TextEncoder().encode(password),
     'PBKDF2',
     false,
     ['deriveKey']
@@ -149,33 +149,33 @@ export async function deriveKeyFromPassphrase(passphrase, salt) {
 }
 
 /**
- * Wrap (encrypt) a content key with a passphrase-derived AES-KW key.
+ * Wrap (encrypt) a content key with a password-derived AES-KW key.
  * The wrapped key can be safely placed in the URL fragment alongside the salt.
  *
  * @param {CryptoKey} contentKey - AES-GCM content key to protect
- * @param {CryptoKey} passphraseKey - AES-KW key from deriveKeyFromPassphrase()
+ * @param {CryptoKey} passwordKey - AES-KW key from deriveKeyFromPassword()
  * @returns {Promise<string>} base64url-encoded wrapped key
  */
-export async function wrapKey(contentKey, passphraseKey) {
-  const wrapped = await crypto.subtle.wrapKey('raw', contentKey, passphraseKey, 'AES-KW');
+export async function wrapKey(contentKey, passwordKey) {
+  const wrapped = await crypto.subtle.wrapKey('raw', contentKey, passwordKey, 'AES-KW');
   return arrayBufferToBase64(wrapped);
 }
 
 /**
- * Unwrap (decrypt) a wrapped content key using a passphrase-derived AES-KW key.
- * Throws if the passphrase is wrong.
+ * Unwrap (decrypt) a wrapped content key using a password-derived AES-KW key.
+ * Throws if the password is wrong.
  *
  * @param {string} wrappedKeyBase64 - base64url-encoded wrapped key from wrapKey()
- * @param {CryptoKey} passphraseKey - AES-KW key from deriveKeyFromPassphrase()
+ * @param {CryptoKey} passwordKey - AES-KW key from deriveKeyFromPassword()
  * @returns {Promise<CryptoKey>} Unwrapped AES-GCM content key
- * @throws {Error} If the passphrase is incorrect
+ * @throws {Error} If the password is incorrect
  */
-export async function unwrapKey(wrappedKeyBase64, passphraseKey) {
+export async function unwrapKey(wrappedKeyBase64, passwordKey) {
   const wrappedKey = base64ToArrayBuffer(wrappedKeyBase64);
   return crypto.subtle.unwrapKey(
     'raw',
     wrappedKey,
-    passphraseKey,
+    passwordKey,
     'AES-KW',
     { name: 'AES-GCM', length: 256 },
     true,
@@ -274,7 +274,7 @@ if (typeof window !== 'undefined') {
     decrypt,
     exportKey,
     importKey,
-    deriveKeyFromPassphrase,
+    deriveKeyFromPassword,
     wrapKey,
     unwrapKey,
     generateShareUrl,

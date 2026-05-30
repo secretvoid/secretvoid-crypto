@@ -87,33 +87,33 @@ clearKeyFromUrl();
 
 Or load it as a classic script for `window.SecretVoidCrypto` access — see [Browser global](#browser-global) below.
 
-### Passphrase protection
+### Password protection
 
-Add a second layer: the content key is wrapped with a passphrase-derived key (PBKDF2, 100,000 iterations, SHA-256). The passphrase is never sent anywhere.
+Add a second layer: the content key is wrapped with a password-derived key (PBKDF2, 100,000 iterations, SHA-256). The password is never sent anywhere.
 
 ```js
 import {
   generateKey, encrypt, decrypt,
   exportKey, wrapKey, unwrapKey,
-  deriveKeyFromPassphrase
+  deriveKeyFromPassword
 } from 'secretvoid-crypto';
 
 // --- Sender side ---
 const contentKey = await generateKey();
 const { payload, iv } = await encrypt('secret', contentKey);
 
-// Derive a wrapping key from the passphrase
+// Derive a wrapping key from the password
 const salt = crypto.getRandomValues(new Uint8Array(16));
-const passphraseKey = await deriveKeyFromPassphrase('correct-horse-battery', salt);
-const wrappedKey = await wrapKey(contentKey, passphraseKey);
+const passwordKey = await deriveKeyFromPassword('correct-horse-battery', salt);
+const wrappedKey = await wrapKey(contentKey, passwordKey);
 
 // Store: { payload, iv, wrappedKey, salt } on the server
-// The recipient needs the passphrase to unwrap the content key
+// The recipient needs the password to unwrap the content key
 
 
 // --- Recipient side ---
-const passphraseKey = await deriveKeyFromPassphrase('correct-horse-battery', salt);
-const contentKey = await unwrapKey(wrappedKey, passphraseKey);
+const passwordKey = await deriveKeyFromPassword('correct-horse-battery', salt);
+const contentKey = await unwrapKey(wrappedKey, passwordKey);
 const plaintext = await decrypt(payload, iv, contentKey);
 ```
 
@@ -174,24 +174,24 @@ Reads the key from `window.location.hash`. Returns `null` if the fragment is abs
 
 Calls `history.replaceState` to remove the key from the URL bar and browser history after decryption. Prevents the key from appearing in referrer headers or history sniffing.
 
-### Passphrase derivation
+### Password derivation
 
-#### `deriveKeyFromPassphrase(passphrase, salt) → Promise<CryptoKey>`
+#### `deriveKeyFromPassword(password, salt) → Promise<CryptoKey>`
 
-Derives an AES-256-KW key from a passphrase using PBKDF2 (100,000 iterations, SHA-256). The salt must be stored alongside the wrapped key so the recipient can re-derive the same wrapping key.
+Derives an AES-256-KW key from a password using PBKDF2 (100,000 iterations, SHA-256). The salt must be stored alongside the wrapped key so the recipient can re-derive the same wrapping key.
 
 | Param | Type | Description |
 | --- | --- | --- |
-| `passphrase` | `string` | User-supplied passphrase |
+| `password` | `string` | User-supplied password |
 | `salt` | `Uint8Array \| ArrayBuffer \| string` | Random salt (or base64url string) |
 
-#### `wrapKey(contentKey, passphraseKey) → Promise<string>`
+#### `wrapKey(contentKey, passwordKey) → Promise<string>`
 
-Wraps (encrypts) a content key using an AES-KW passphrase-derived key. Returns a base64url string.
+Wraps (encrypts) a content key using an AES-KW password-derived key. Returns a base64url string.
 
-#### `unwrapKey(wrappedKeyBase64, passphraseKey) → Promise<CryptoKey>`
+#### `unwrapKey(wrappedKeyBase64, passwordKey) → Promise<CryptoKey>`
 
-Unwraps a content key. Throws if the passphrase is incorrect.
+Unwraps a content key. Throws if the password is incorrect.
 
 ### Utilities
 
@@ -220,7 +220,7 @@ When loaded via a classic `<script>` tag (no bundler), all functions are availab
 - **AES-256-GCM** — authenticated encryption. Tampered ciphertext throws before any data is returned.
 - **Zero knowledge** — the server receives only the encrypted blob. The key lives exclusively in the URL fragment, which the HTTP spec (`RFC 7230`) guarantees is never transmitted.
 - **Unique IV per encryption** — random 12-byte IV generated for every `encrypt()` call. Reusing an IV with the same key is catastrophic for AES-GCM; this module never does it.
-- **Passphrase derivation** — PBKDF2 with 100,000 iterations and SHA-256. The passphrase never leaves the browser.
+- **Password derivation** — PBKDF2 with 100,000 iterations and SHA-256. The password never leaves the browser.
 - **No dependencies** — the Web Crypto API is built into every modern browser and Node.js 18+. No supply chain to compromise.
 - **Fragment cleared after decrypt** — call `clearKeyFromUrl()` after decryption to prevent the key lingering in browser history or referrer headers.
 

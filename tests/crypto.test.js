@@ -13,7 +13,7 @@ import {
   decrypt,
   exportKey,
   importKey,
-  deriveKeyFromPassphrase,
+  deriveKeyFromPassword,
   wrapKey,
   unwrapKey,
   generateShareUrl,
@@ -135,60 +135,60 @@ describe('exportKey / importKey', () => {
 });
 
 // ---------------------------------------------------------------------------
-// Passphrase protection — PBKDF2 + AES-KW
+// Password protection — PBKDF2 + AES-KW
 // ---------------------------------------------------------------------------
 
-describe('deriveKeyFromPassphrase / wrapKey / unwrapKey', () => {
-  test('correct passphrase unwraps the content key and decrypts successfully', async () => {
+describe('deriveKeyFromPassword / wrapKey / unwrapKey', () => {
+  test('correct password unwraps the content key and decrypts successfully', async () => {
     const contentKey = await generateKey();
-    const plaintext = 'passphrase-protected secret';
+    const plaintext = 'password-protected secret';
     const { payload, iv } = await encrypt(plaintext, contentKey);
 
     const salt = randomSalt();
-    const passphraseKey = await deriveKeyFromPassphrase('correct-pass', salt);
-    const wrapped = await wrapKey(contentKey, passphraseKey);
+    const passwordKey = await deriveKeyFromPassword('correct-pass', salt);
+    const wrapped = await wrapKey(contentKey, passwordKey);
 
-    const passphraseKey2 = await deriveKeyFromPassphrase('correct-pass', salt);
-    const unwrapped = await unwrapKey(wrapped, passphraseKey2);
+    const passwordKey2 = await deriveKeyFromPassword('correct-pass', salt);
+    const unwrapped = await unwrapKey(wrapped, passwordKey2);
     expect(await decrypt(payload, iv, unwrapped)).toBe(plaintext);
   });
 
-  test('wrong passphrase fails to unwrap the content key', async () => {
+  test('wrong password fails to unwrap the content key', async () => {
     const salt = randomSalt();
-    const passphraseKey = await deriveKeyFromPassphrase('correct-pass', salt);
-    const wrapped = await wrapKey(await generateKey(), passphraseKey);
+    const passwordKey = await deriveKeyFromPassword('correct-pass', salt);
+    const wrapped = await wrapKey(await generateKey(), passwordKey);
 
-    const wrongKey = await deriveKeyFromPassphrase('wrong-pass', salt);
+    const wrongKey = await deriveKeyFromPassword('wrong-pass', salt);
     await expect(unwrapKey(wrapped, wrongKey)).rejects.toThrow();
   });
 
   test('wrapKey returns a non-empty base64url string without +, /, or =', async () => {
-    const passphraseKey = await deriveKeyFromPassphrase('pass', randomSalt());
-    const wrapped = await wrapKey(await generateKey(), passphraseKey);
+    const passwordKey = await deriveKeyFromPassword('pass', randomSalt());
+    const wrapped = await wrapKey(await generateKey(), passwordKey);
     expect(typeof wrapped).toBe('string');
     expect(wrapped.length).toBeGreaterThan(0);
     expect(wrapped).not.toMatch(/[+/=]/);
   });
 
-  test('base64url salt is accepted by deriveKeyFromPassphrase', async () => {
+  test('base64url salt is accepted by deriveKeyFromPassword', async () => {
     const rawSalt = randomSalt();
     const saltB64 = arrayBufferToBase64(rawSalt.buffer);
 
-    const passphraseKey = await deriveKeyFromPassphrase('pass', saltB64);
-    const wrapped = await wrapKey(await generateKey(), passphraseKey);
+    const passwordKey = await deriveKeyFromPassword('pass', saltB64);
+    const wrapped = await wrapKey(await generateKey(), passwordKey);
 
-    const passphraseKey2 = await deriveKeyFromPassphrase('pass', saltB64);
-    const unwrapped = await unwrapKey(wrapped, passphraseKey2);
+    const passwordKey2 = await deriveKeyFromPassword('pass', saltB64);
+    const unwrapped = await unwrapKey(wrapped, passwordKey2);
     expect(unwrapped).toBeTruthy();
   });
 
-  test('different passphrases produce different derived keys', async () => {
+  test('different passwords produce different derived keys', async () => {
     const salt = randomSalt();
     const contentKey = await generateKey();
-    const k1 = await deriveKeyFromPassphrase('pass-one', salt);
+    const k1 = await deriveKeyFromPassword('pass-one', salt);
     const wrapped = await wrapKey(contentKey, k1);
 
-    const k2 = await deriveKeyFromPassphrase('pass-two', salt);
+    const k2 = await deriveKeyFromPassword('pass-two', salt);
     await expect(unwrapKey(wrapped, k2)).rejects.toThrow();
   });
 });
